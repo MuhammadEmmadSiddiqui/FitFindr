@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # Streamlit Web Application
+  streamlit:
+    build: .
+    container_name: fitfindr-streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - GROQ_API_KEYS=${GROQ_API_KEYS}
+      - DATABASE_URL=sqlite:///./data/fitfindr.db
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+    restart: unless-stopped
+    networks:
+      - fitfindr-network
+
+  # FastAPI Backend
+  api:
+    build: .
+    container_name: fitfindr-api
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEYS=${GROQ_API_KEYS}
+      - DATABASE_URL=sqlite:///./data/fitfindr.db
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
+    networks:
+      - fitfindr-network
+
+  # PostgreSQL Database (optional - uncomment to use)
+  # postgres:
+  #   image: postgres:15
+  #   container_name: fitfindr-postgres
+  #   environment:
+  #     - POSTGRES_USER=fitfindr
+  #     - POSTGRES_PASSWORD=fitfindr_password
+  #     - POSTGRES_DB=fitfindr
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - fitfindr-network
+
+networks:
+  fitfindr-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

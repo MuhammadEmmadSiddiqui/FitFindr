@@ -65,3 +65,10 @@ htmlcov/
 
 # Streamlit
 .streamlit/
+
+
+# Files
+MIGRATION_GUIDE.md
+MIGRATION_GUIDE.md
+PROJECT_SUMMARY.md
+

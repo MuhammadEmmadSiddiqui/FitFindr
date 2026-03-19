@@ -33,6 +33,11 @@ env/
 *.swo
 *~
 
+# Dependencies
+node_modules/
+dist/
+build/
+
 # Environment
 .env
 .env.local
@@ -46,6 +51,7 @@ data/*.sqlite
 # Logs
 logs/*.log
 logs/*.txt
+logs/llm_responses/
 
 # MacOS
 .DS_Store
@@ -72,3 +78,4 @@ MIGRATION_GUIDE.md
 MIGRATION_GUIDE.md
 PROJECT_SUMMARY.md
 
+node_modules/

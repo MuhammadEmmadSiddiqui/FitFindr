@@ -46,10 +46,13 @@ def check_python_version():
 
 
 def install_dependencies():
-    """Install Python dependencies"""
-    print("\nInstalling dependencies...")
-    os.system(f"{sys.executable} -m pip install --upgrade pip")
-    os.system(f"{sys.executable} -m pip install -r requirements.txt")
+    """Install Python dependencies using uv"""
+    print("\nInstalling dependencies with uv...")
+    # Ensure uv is available; install it via pip as a bootstrap step if missing
+    if os.system("uv --version") != 0:
+        print("uv not found — installing uv...")
+        os.system(f"{sys.executable} -m pip install uv")
+    os.system("uv pip install -r requirements.txt")
     print("✓ Dependencies installed")
 
 

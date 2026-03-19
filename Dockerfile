@@ -4,15 +4,16 @@ FROM python:3.10-slim as builder
 # Set working directory
 WORKDIR /app
 
-# Install build dependencies
+# Install build dependencies and uv
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir uv
 
-# Copy requirements and install Python dependencies
+# Copy requirements and install Python dependencies using uv
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN uv pip install --system --no-cache -r requirements.txt
 
 # Final stage
 FROM python:3.10-slim
@@ -20,19 +21,21 @@ FROM python:3.10-slim
 # Set working directory
 WORKDIR /app
 
-# Install runtime dependencies
+# Install runtime dependencies and uv
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir uv
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
+# Copy installed site-packages from builder
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY . .
 
-# Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
+# Ensure installed scripts are on PATH
+ENV PATH=/usr/local/bin:$PATH
 
 # Create necessary directories
 RUN mkdir -p data/uploads logs
@@ -45,4 +48,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8501/_stcore/health')" || exit 1
 
 # Default command (can be overridden)
-CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "frontend/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]

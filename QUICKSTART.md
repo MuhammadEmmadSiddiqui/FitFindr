@@ -39,12 +39,15 @@ docker-compose up -d
 #### Option B: Local Development
 
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+# Install uv (once)
+pip install uv
+
+# Create and activate virtual environment with uv
+uv venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 
 # Run Streamlit
 streamlit run streamlit_app.py

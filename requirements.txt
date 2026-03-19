@@ -1,6 +1,7 @@
 ﻿# Core Dependencies
 python-dotenv==1.0.0
 pydantic==2.10.5
+pydantic[email]
 pydantic-settings==2.6.1
 
 # Web Frameworks
@@ -8,19 +9,28 @@ streamlit==1.41.1
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 
+# Authentication
+python-jose[cryptography]==3.3.0
+
 # Machine Learning & NLP
 transformers==4.48.0
 torch==2.6.0
 scikit-learn==1.6.1
 groq==0.15.0
+instructor==1.7.2
 
 # Database
 sqlalchemy==2.0.36
 alembic==1.14.0
 
 # File Processing
-PyMuPDF==1.25.1
+docling
+pypdfium2
 python-multipart==0.0.20
+
+# Agentic pipeline
+langgraph
+langsmith
 
 # Data Processing
 pandas==2.2.3

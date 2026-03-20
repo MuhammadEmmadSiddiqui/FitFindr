@@ -37,6 +37,7 @@ env/
 node_modules/
 dist/
 build/
+.next/
 
 # Environment
 .env
@@ -52,6 +53,7 @@ data/*.sqlite
 logs/*.log
 logs/*.txt
 logs/llm_responses/
+*.log
 
 # MacOS
 .DS_Store
@@ -69,13 +71,15 @@ htmlcov/
 # Jupyter
 .ipynb_checkpoints
 
-# Streamlit
+# Streamlit (legacy — kept for reference)
 .streamlit/
 
+# Generated artifacts
+graph.png
+_write_docs.py
 
 # Files
 MIGRATION_GUIDE.md
-MIGRATION_GUIDE.md
 PROJECT_SUMMARY.md
-
+*.mp4
 node_modules/

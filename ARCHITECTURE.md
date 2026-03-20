@@ -1,470 +1,189 @@
-# 🏗️ FitFindr Architecture
+# Architecture
 
-## System Architecture Diagram
+## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         USER INTERFACE                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌──────────────────┐              ┌──────────────────┐        │
-│  │   Streamlit UI   │              │   REST API       │        │
-│  │  streamlit_app   │              │   /api/screen    │        │
-│  │                  │              │   /api/results   │        │
-│  │  • File Upload   │              │   /health        │        │
-│  │  • Dashboard     │              │                  │        │
-│  │  • Analytics     │              │  (FastAPI)       │        │
-│  │  • Filtering     │              │                  │        │
-│  └────────┬─────────┘              └────────┬─────────┘        │
-│           │                                 │                  │
-└───────────┼─────────────────────────────────┼──────────────────┘
-            │                                 │
-            └────────────┬────────────────────┘
-                         │
-┌────────────────────────┴─────────────────────────────────────────┐
-│                    SERVICE LAYER                                 │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │            ScreeningService                              │    │
-│  │  • Orchestrates complete workflow                        │    │
-│  │  • Processes multiple resumes                            │    │
-│  │  • Coordinates services                                  │    │
-│  └────────┬──────────────────┬──────────────────┬───────────┘    │
-│           │                  │                  │                │
-│  ┌────────▼────────┐  ┌─────▼──────────┐  ┌───▼────────────┐   │
-│  │ EmbeddingService│  │ ResumeParser   │  │ Database Repo  │   │
-│  │                 │  │ Service        │  │                │   │
-│  │ • BERT Model    │  │                │  │ • Save results │   │
-│  │ • Tokenizer     │  │ • Groq API     │  │ • Retrieve     │   │
-│  │ • Similarity    │  │ • LLM Parsing  │  │ • Query        │   │
-│  │   Calculation   │  │ • Data Extract │  │                │   │
-│  └─────────────────┘  └────────────────┘  └───┬────────────┘   │
-│                                               │                │
-└───────────────────────────────────────────────┼────────────────┘
-                                                │
-┌───────────────────────────────────────────────┴────────────────┐
-│                    DATA MODELS                                 │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  ┌─────────────────┐  ┌──────────────────┐  ┌──────────────┐ │
-│  │   ResumeData    │  │ ScreeningResult  │  │ Employment   │ │
-│  │   (Pydantic)    │  │   (Pydantic)     │  │   Detail     │ │
-│  │                 │  │                  │  │              │ │
-│  │ • full_name     │  │ • resume_file    │  │ • company    │ │
-│  │ • university    │  │ • similarity     │  │ • position   │ │
-│  │ • skills        │  │ • candidate_data │  │ • years      │ │
-│  │ • experience    │  │ • timestamp      │  │              │ │
-│  └─────────────────┘  └──────────────────┘  └──────────────┘ │
-│                                                                │
-└───────────────────────────────────────┬────────────────────────┘
-                                        │
-┌───────────────────────────────────────┴────────────────────────┐
-│                    DATABASE LAYER                              │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  ┌──────────────────────────────────────────────────────────┐ │
-│  │              SQLAlchemy ORM                               │ │
-│  │                                                           │ │
-│  │  ┌─────────────────────┐  ┌─────────────────────┐       │ │
-│  │  │ ScreeningResultDB   │  │ JobDescriptionDB    │       │ │
-│  │  │                     │  │                     │       │ │
-│  │  │ • id (PK)           │  │ • id (PK)           │       │ │
-│  │  │ • jd_id (FK)        │  │ • title             │       │ │
-│  │  │ • resume_filename   │  │ • content           │       │ │
-│  │  │ • similarity_score  │  │ • hash              │       │ │
-│  │  │ • candidate_data    │  │ • created_at        │       │ │
-│  │  │ • screening_date    │  │                     │       │ │
-│  │  └─────────────────────┘  └─────────────────────┘       │ │
-│  │                                                           │ │
-│  └──────────────────────────────────────────────────────────┘ │
-│                              │                                 │
-│                    ┌─────────▼──────────┐                     │
-│                    │   SQLite / PG      │                     │
-│                    │   Database         │                     │
-│                    └────────────────────┘                     │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
-
-
-┌────────────────────────────────────────────────────────────────┐
-│                    EXTERNAL SERVICES                           │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  ┌──────────────┐    ┌──────────────┐    ┌────────────────┐  │
-│  │   Groq API   │    │ Hugging Face │    │   File System  │  │
-│  │   (Llama 3)  │    │   (BERT)     │    │   (Storage)    │  │
-│  │              │    │              │    │                │  │
-│  │ • Parse      │    │ • Embeddings │    │ • Uploads      │  │
-│  │ • Extract    │    │ • Similarity │    │ • Logs         │  │
-│  └──────────────┘    └──────────────┘    └────────────────┘  │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
++----------------------------------------------------------------------------+
+|                    FRONTEND  (Next.js 15, port 3000)                       |
+|                                                                            |
+|  app/login          app/register        app/dashboard                     |
+|  components/CandidateCard               components/ResultsTable           |
+|  components/Analytics                   components/FilterPanel            |
+|                                                                            |
+|  lib/api.ts  →  JWT Bearer fetch  →  FastAPI backend                      |
++------------------------------+---------------------------------------------+
+                               |  HTTP / REST
++------------------------------v---------------------------------------------+
+|                    BACKEND  (FastAPI 0.115, port 8000)                     |
+|                                                                            |
+|  POST /api/screen          GET /api/results                               |
+|  POST /auth/register       POST /auth/login                               |
+|  GET  /health                                                              |
++------------------------------+---------------------------------------------+
+                               |
++------------------------------v---------------------------------------------+
+|                 LANGGRAPH AGENTIC PIPELINE  (graph_service.py)            |
+|                                                                            |
+|  GraphScreeningService.analyze_jd()  ←  runs once per batch              |
+|    extracts: must_have_skills, nice_to_have_skills,                       |
+|              seniority_level, domain, min_years_experience                |
+|                                                                            |
+|  Per-resume StateGraph:                                                    |
+|                                                                            |
+|  START                                                                     |
+|   └─► embed_and_score                                                     |
+|            │  score < 0.40  ──────────────────────────────► build_result  |
+|            │  score 0.40-0.70 (standard)                                  |
+|            │  score >= 0.70  (deep)     ──► parse_resume                  |
+|                                               │                           |
+|                                    sparse parse (>=4 N/A)?                |
+|                                      yes → retry_parse                    |
+|                                      no  → (continue)                     |
+|                                               │                           |
+|                                    depth = deep?                          |
+|                                      yes → deep_analysis                  |
+|                                      no  → build_result                   |
+|                                               │                           |
+|                                    deep_analysis → build_result → END     |
++-------------------+------------------+--------------------------------------+
+                    |                  |
+       +------------v------+  +--------v---------+  +----------------------+
+       | EmbeddingService  |  |  Groq LLM        |  | SQLAlchemy ORM      |
+       | bert-base-uncased |  |  instructor      |  | ScreeningResultDB   |
+       | cosine similarity |  |  ResumeData      |  | UserDB              |
+       |                   |  |  DeepAnalysis    |  | JobDescriptionDB    |
+       +-------------------+  +------------------+  +----------------------+
 ```
 
 ---
 
-## Data Flow Diagram
+## LangGraph Node Descriptions
+
+| Node | Purpose | LLM Call |
+|------|---------|----------|
+| `embed_and_score` | Compute BERT cosine similarity; decide `skip/standard/deep` | No |
+| `parse_resume` | First-pass structured extraction with `instructor` + Groq | Yes |
+| `retry_parse` | Self-healing re-extraction with an enhanced system prompt | Yes |
+| `deep_analysis` | Skill gaps, red flags, interview questions, recommendation | Yes |
+| `build_result` | Assemble `ScreeningResult` from accumulated state | No |
+
+---
+
+## Data Models
+
+### Pydantic Domain (`backend/src/models.py`)
 
 ```
-┌──────────┐
-│  User    │
-└────┬─────┘
-     │
-     │ 1. Upload JD + Resumes
-     │
-     ▼
-┌────────────────┐
-│  Streamlit/    │
-│  FastAPI       │
-└────┬───────────┘
-     │
-     │ 2. Create request
-     │
-     ▼
-┌──────────────────────┐
-│  ScreeningService    │
-│  • Process JD        │
-│  • Loop resumes      │
-└────┬─────────────────┘
-     │
-     │ 3. For each resume
-     │
-     ├─────────────┬────────────────┐
-     │             │                │
-     ▼             ▼                ▼
-┌─────────┐  ┌───────────┐  ┌────────────┐
-│ Extract │  │ Calculate │  │   Parse    │
-│  Text   │  │ Embedding │  │  with LLM  │
-└────┬────┘  └─────┬─────┘  └─────┬──────┘
-     │             │                │
-     │             ▼                │
-     │      ┌──────────────┐       │
-     │      │  Similarity  │       │
-     │      │  Calculation │       │
-     │      └──────┬───────┘       │
-     │             │                │
-     └─────────────┴────────────────┘
-                   │
-                   │ 4. Combine results
-                   │
-                   ▼
-         ┌──────────────────┐
-         │ ScreeningResult  │
-         │  • Score         │
-         │  • Data          │
-         └────┬─────────────┘
-              │
-              │ 5. Save to DB
-              │
-              ▼
-         ┌──────────────┐
-         │   Database   │
-         └────┬─────────┘
-              │
-              │ 6. Return results
-              │
-              ▼
-         ┌──────────────┐
-         │  Display to  │
-         │     User     │
-         └──────────────┘
+EmploymentDetail
+  company, position, start_date, end_date, location, tags
+  computed: duration_years, years_of_experience
+
+ResumeData
+  full_name, university_name, national_or_international
+  email_id, phone_number, github_link, location
+  employment_details: List[EmploymentDetail]
+  technical_skills: List[str]
+  soft_skills: List[str]
+  computed: total_professional_experience
+
+ScreeningResult
+  resume_filename, similarity_score
+  (all ResumeData fields flattened)
+  analysis_depth, jd_domain, jd_seniority
+  skill_gaps, red_flags, interview_questions
+  overall_recommendation
+```
+
+### SQLAlchemy ORM (`backend/src/database/models.py`)
+
+```
+UserDB            — id, username, email, hashed_password, created_at
+ScreeningResultDB — id, jd_id (FK), resume_filename, similarity_score,
+                    candidate_data (JSON), screening_date
+JobDescriptionDB  — id, title, content, hash, created_at
 ```
 
 ---
 
-## Component Interaction
+## API Request/Response Flow
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Request Flow                             │
-└─────────────────────────────────────────────────────────────┘
-
-HTTP Request → FastAPI Router → Endpoint Handler
-                                      │
-                                      ▼
-                                Service Layer
-                                      │
-                    ┌─────────────────┼─────────────────┐
-                    │                 │                 │
-                    ▼                 ▼                 ▼
-              EmbeddingService  ParserService  DatabaseRepo
-                    │                 │                 │
-                    ▼                 ▼                 ▼
-               BERT Model        Groq API         SQLAlchemy
-                    │                 │                 │
-                    └─────────────────┴─────────────────┘
-                                      │
-                                      ▼
-                              Response Object
-                                      │
-                                      ▼
-                                 JSON Response
-
-
-┌─────────────────────────────────────────────────────────────┐
-│                Configuration Management                      │
-└─────────────────────────────────────────────────────────────┘
-
-.env file → settings.py (Pydantic) → Components
-                │
-                ├→ API Keys
-                ├→ Model Names
-                ├→ Database URL
-                ├→ Ports
-                └→ Logging Config
+Client                 FastAPI               LangGraph             DB
+  |                       |                      |                  |
+  |-- POST /api/screen --> |                      |                  |
+  |   (JWT + multipart)    |                      |                  |
+  |                        |-- analyze_jd() ----> |                  |
+  |                        |                      |-- Groq API call  |
+  |                        |                      |<- JdRequirements |
+  |                        |                      |                  |
+  |                        |  for each resume:    |                  |
+  |                        |-- graph.invoke() ---> |                  |
+  |                        |                      |-- BERT embed     |
+  |                        |                      |-- [Groq parse]   |
+  |                        |                      |-- [Groq deep]    |
+  |                        |                      |-- ScreeningResult|
+  |                        |<- List[result] ------ |                  |
+  |                        |-- save results ------> |                 |
+  |<- ScreeningBatch ------ |                                         |
 ```
 
 ---
 
-## Deployment Architecture
+## Technology Stack
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                     Development                              │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  Python Virtual Environment                                  │
-│  • Local SQLite                                             │
-│  • streamlit run streamlit_app.py                          │
-│  • python -m uvicorn src.api.main:app --reload             │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-
-
-┌──────────────────────────────────────────────────────────────┐
-│                     Docker Compose                           │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌──────────────────┐        ┌──────────────────┐          │
-│  │  streamlit       │        │      api         │          │
-│  │  Container       │        │   Container      │          │
-│  │  Port: 8501      │        │   Port: 8000     │          │
-│  └────────┬─────────┘        └────────┬─────────┘          │
-│           │                           │                     │
-│           └───────────┬───────────────┘                     │
-│                       │                                     │
-│                  ┌────▼─────┐                              │
-│                  │  Shared  │                              │
-│                  │  Volume  │                              │
-│                  │  (data)  │                              │
-│                  └──────────┘                              │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-
-
-┌──────────────────────────────────────────────────────────────┐
-│                     Cloud Production                         │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌──────────────────────────────────────────────────┐       │
-│  │                Load Balancer                      │       │
-│  └────────┬──────────────────────────┬───────────────┘       │
-│           │                          │                       │
-│  ┌────────▼─────────┐      ┌────────▼─────────┐            │
-│  │  App Instance 1  │      │  App Instance 2  │            │
-│  │  (Container)     │      │  (Container)     │            │
-│  └────────┬─────────┘      └────────┬─────────┘            │
-│           │                          │                       │
-│           └──────────┬───────────────┘                       │
-│                      │                                       │
-│              ┌───────▼────────┐                             │
-│              │   PostgreSQL    │                             │
-│              │    Database     │                             │
-│              │   (RDS/Cloud)   │                             │
-│              └─────────────────┘                             │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-```
+| Component | Library / Version |
+|-----------|------------------|
+| Frontend framework | Next.js 15.5 (App Router) |
+| UI library | React 19 |
+| Styling | Tailwind CSS 3.4 |
+| Charts | Recharts 2.12 |
+| Backend framework | FastAPI 0.115 |
+| ASGI server | uvicorn |
+| Agentic pipeline | LangGraph |
+| Observability | LangSmith (`@traceable`) |
+| LLM inference | Groq (`llama-3.3-70b-versatile`) |
+| Structured LLM output | instructor 1.7 |
+| Embeddings | bert-base-uncased (HuggingFace transformers) |
+| ML utilities | PyTorch, scikit-learn |
+| ORM | SQLAlchemy 2.0 |
+| Auth | JWT (python-jose), bcrypt |
+| File parsing | pypdfium2 |
+| Testing | pytest, pytest-cov, httpx |
+| Containerisation | Docker, Docker Compose |
 
 ---
 
-## Technology Stack Layers
+## Deployment Scenarios
 
+### Development
+
+```bash
+# Backend
+.venv\Scripts\python.exe -m uvicorn --app-dir backend src.api.main:app \
+    --reload --reload-dir backend/src --port 8000
+
+# Frontend
+cd frontend && npm run dev   # port 3000
 ```
-┌─────────────────────────────────────────────────────────┐
-│  Layer 1: Presentation / UI                             │
-├─────────────────────────────────────────────────────────┤
-│  • Streamlit (Web UI)                                   │
-│  • HTML/CSS (Styling)                                   │
-│  • Plotly, Matplotlib (Charts)                          │
-└─────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────┐
-│  Layer 2: API / Interface                               │
-├─────────────────────────────────────────────────────────┤
-│  • FastAPI (REST Endpoints)                             │
-│  • Pydantic (Validation)                                │
-│  • OpenAPI/Swagger (Documentation)                      │
-└─────────────────────────────────────────────────────────┘
+### Docker Compose
 
-┌─────────────────────────────────────────────────────────┐
-│  Layer 3: Business Logic                                │
-├─────────────────────────────────────────────────────────┤
-│  • ScreeningService (Orchestration)                     │
-│  • EmbeddingService (BERT)                              │
-│  • ResumeParserService (LLM)                            │
-└─────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────┐
-│  Layer 4: Data Access                                   │
-├─────────────────────────────────────────────────────────┤
-│  • Repository Pattern                                   │
-│  • SQLAlchemy ORM                                       │
-│  • Database Models                                      │
-└─────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────┐
-│  Layer 5: Data Storage                                  │
-├─────────────────────────────────────────────────────────┤
-│  • SQLite (Development)                                 │
-│  • PostgreSQL (Production)                              │
-│  • File System (Uploads, Logs)                          │
-└─────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────┐
-│  Layer 6: External Services                             │
-├─────────────────────────────────────────────────────────┤
-│  • Groq API (LLM)                                       │
-│  • Hugging Face (BERT Models)                           │
-│  • PyTorch (ML Framework)                               │
-└─────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────┐
-│  Layer 7: Infrastructure                                │
-├─────────────────────────────────────────────────────────┤
-│  • Docker (Containerization)                            │
-│  • Docker Compose (Orchestration)                       │
-│  • GitHub Actions (CI/CD)                               │
-└─────────────────────────────────────────────────────────┘
+```bash
+docker-compose up -d   # backend :8000, frontend :3000
 ```
+
+### Cloud (separate services)
+
+- **Backend**: Deploy `Dockerfile` to Railway / Fly.io / Render. Set `GROQ_API_KEYS`, `SECRET_KEY`, `DATABASE_URL`.
+- **Frontend**: Deploy `frontend/` to Vercel. Set `NEXT_PUBLIC_API_URL=https://your-backend-url`.
 
 ---
 
-## Security Architecture
+## Security Considerations
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  Security Layers                                        │
-└─────────────────────────────────────────────────────────┘
-
-┌──────────────────┐
-│  Environment     │  ← API Keys stored securely
-│  Variables       │  ← Not in code repository
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  Input           │  ← File type validation
-│  Validation      │  ← Size limits
-└────────┬─────────┘  ← Content sanitization
-         │
-         ▼
-┌──────────────────┐
-│  API Layer       │  ← Rate limiting (via Groq)
-│                  │  ← Error handling
-└────────┬─────────┘  ← Request validation
-         │
-         ▼
-┌──────────────────┐
-│  Data Layer      │  ← SQL injection prevention (ORM)
-│                  │  ← Data sanitization
-└────────┬─────────┘  ← Access control ready
-         │
-         ▼
-┌──────────────────┐
-│  Storage         │  ← File permissions
-│                  │  ← Database security
-└──────────────────┘
-```
-
----
-
-## Scalability Design
-
-```
-Current (Single Instance)
-┌──────────────────┐
-│   Application    │
-│   • Streamlit    │
-│   • API          │
-│   • Database     │
-└──────────────────┘
-
-Future (Scaled)
-┌──────────────────────────────────────────┐
-│          Load Balancer                   │
-└────┬──────────┬──────────┬───────────────┘
-     │          │          │
-┌────▼────┐ ┌──▼──────┐ ┌─▼─────────┐
-│  App 1  │ │  App 2  │ │  App N    │
-└────┬────┘ └──┬──────┘ └─┬─────────┘
-     │         │           │
-     └─────────┴───────────┴──┐
-                               │
-                        ┌──────▼───────┐
-                        │   Redis      │
-                        │   (Cache)    │
-                        └──────┬───────┘
-                               │
-                        ┌──────▼───────┐
-                        │  PostgreSQL  │
-                        │  (Database)  │
-                        └──────────────┘
-```
-
----
-
-## CI/CD Pipeline
-
-```
-┌──────────────────────────────────────────────────────────┐
-│                     Git Push                             │
-└───────────────────┬──────────────────────────────────────┘
-                    │
-                    ▼
-           ┌────────────────┐
-           │  GitHub Action │
-           │    Triggered   │
-           └────────┬───────┘
-                    │
-        ┌───────────┴───────────┐
-        │                       │
-        ▼                       ▼
-┌───────────────┐      ┌───────────────┐
-│  Run Tests    │      │  Lint Code    │
-│  (pytest)     │      │  (flake8)     │
-└───────┬───────┘      └───────┬───────┘
-        │                       │
-        └───────────┬───────────┘
-                    │
-                    ▼
-            ┌───────────────┐
-            │  Build Docker │
-            │     Image     │
-            └───────┬───────┘
-                    │
-                    ▼
-            ┌───────────────┐
-            │  Push to      │
-            │  Registry     │
-            └───────┬───────┘
-                    │
-                    ▼
-            ┌───────────────┐
-            │    Deploy     │
-            │  to Cloud     │
-            └───────────────┘
-```
-
----
-
-This architecture ensures:
-
-✅ **Separation of Concerns**: Each layer has a specific responsibility  
-✅ **Scalability**: Can grow from single instance to distributed system  
-✅ **Maintainability**: Clear structure makes changes easier  
-✅ **Testability**: Each component can be tested independently  
-✅ **Security**: Multiple layers of protection  
-✅ **Flexibility**: Easy to swap components (e.g., database, LLM provider)  
-
+- Passwords hashed with bcrypt (work factor 12)
+- JWT tokens signed with `SECRET_KEY`; expire in `ACCESS_TOKEN_EXPIRE_MINUTES`
+- File uploads stored in `data/uploads/` (not served publicly)
+- CORS restricted to explicit origins (localhost:3000, localhost:8501)
+- No raw SQL — all DB access via SQLAlchemy ORM
+- Environment secrets loaded from `.env` (never committed)

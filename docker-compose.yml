@@ -1,31 +1,17 @@
 version: '3.8'
 
 services:
-  # Streamlit Web Application
-  streamlit:
-    build: .
-    container_name: fitfindr-streamlit
-    ports:
-      - "8501:8501"
-    environment:
-      - GROQ_API_KEYS=${GROQ_API_KEYS}
-      - DATABASE_URL=sqlite:///./data/fitfindr.db
-    volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-    command: streamlit run frontend/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
-    restart: unless-stopped
-    networks:
-      - fitfindr-network
-
   # FastAPI Backend
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: fitfindr-api
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      - GROQ_API_KEYS=${GROQ_API_KEYS}
       - DATABASE_URL=sqlite:///./data/fitfindr.db
     volumes:
       - ./data:/app/data
@@ -34,15 +20,38 @@ services:
     restart: unless-stopped
     networks:
       - fitfindr-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
-  # PostgreSQL Database (optional - uncomment to use)
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../Dockerfile.frontend
+    container_name: fitfindr-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - fitfindr-network
+
+  # PostgreSQL (optional — uncomment to use)
   # postgres:
-  #   image: postgres:15
+  #   image: postgres:15-alpine
   #   container_name: fitfindr-postgres
   #   environment:
-  #     - POSTGRES_USER=fitfindr
-  #     - POSTGRES_PASSWORD=fitfindr_password
-  #     - POSTGRES_DB=fitfindr
+  #     POSTGRES_USER: fitfindr
+  #     POSTGRES_PASSWORD: fitfindr_password
+  #     POSTGRES_DB: fitfindr
   #   volumes:
   #     - postgres_data:/var/lib/postgresql/data
   #   ports:

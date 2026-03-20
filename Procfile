@@ -1,1 +1,1 @@
-web: streamlit run frontend/streamlit_app.py --server.port=$PORT --server.address=0.0.0.0
+web: python -m uvicorn --app-dir backend src.api.main:app --host 0.0.0.0 --port $PORT

@@ -123,7 +123,6 @@ FitFindr/
 │   ├── lib/api.ts            # Typed JWT fetch client
 │   └── types/index.ts        # Shared TypeScript interfaces
 ├── data/                     # SQLite DB and uploaded files
-├── Sample_data/              # Example JDs and resumes for testing
 ├── requirements.txt          # Python dependencies
 ├── docker-compose.yml        # Multi-container: backend + frontend
 ├── Dockerfile                # Backend (Python) image

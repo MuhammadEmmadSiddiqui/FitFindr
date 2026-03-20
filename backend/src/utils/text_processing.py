@@ -16,7 +16,7 @@ def preprocess_text(text: str) -> str:
     """
     text = re.sub(r'\W', ' ', text)
     text = re.sub(r'\s+', ' ', text)
-    return text.lower()
+    return text.strip().lower()
 
 
 def decode_file(file: BinaryIO) -> str:

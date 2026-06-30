@@ -12,12 +12,15 @@
 
 [Features](#-features) - [Architecture](#-architecture) - [Quick Start](#-quick-start) - [API](#-api-reference) - [Configuration](#-configuration)
 
-<video src="Demo_Video.mp4" controls="controls" width="100%">
-</video>
+---
 
-</div>
+## 📹 Demo Video
+
+[![Watch Demo Video](https://img.shields.io/badge/Watch-Demo%20Video-red?style=for-the-badge&logo=youtube)](Demo_Video.mp4)
 
 ---
+
+</div>
 
 ## Overview
 
@@ -79,11 +82,11 @@ Two independent services:
 |                               +- depth=deep --------> deep_analysis     |
 |                                                           +-> build_result|
 +-------------------+------------------+-----------------------------------+
-                    |                  |
-       +------------v------+  +--------v---------+  +------------------+
-       | EmbeddingService  |  |  Groq LLM        |  | SQLAlchemy ORM   |
-       | bert-base-uncased |  |  instructor      |  | SQLite/Postgres  |
-       +-------------------+  +------------------+  +------------------+
+                     |                  |
+        +------------v------+  +--------v---------+  +------------------+
+        | EmbeddingService  |  |  Groq LLM        |  | SQLAlchemy ORM   |
+        | bert-base-uncased |  |  instructor      |  | SQLite/Postgres  |
+        +-------------------+  +------------------+  +------------------+
 ```
 
 ### Technology Stack

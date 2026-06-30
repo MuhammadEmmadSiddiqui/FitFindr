@@ -12,6 +12,9 @@
 
 [Features](#-features) - [Architecture](#-architecture) - [Quick Start](#-quick-start) - [API](#-api-reference) - [Configuration](#-configuration)
 
+<video src="Demo_Video.mp4" controls="controls" width="100%">
+</video>
+
 </div>
 
 ---
